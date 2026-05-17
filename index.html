@@ -233,6 +233,15 @@
             .section { margin-bottom: 50px; }
         }
     </style>
+    <script>
+    MathJax = {
+    tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']]
+    }
+    };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 <body>
 
@@ -244,13 +253,18 @@
         <div class="hero-overlay"></div>
 
         <div class="hero-content">
-            <h1>Diffusion Policy for Robust Locomotion Control</h1>
+            <h1>Robust Fall Recovery for Armless Bipedal-Wheeled Robots via Force‑Guided Learning</h1>
             <div class="authors">
-                <a href="#" style="color:#fff; text-decoration:underline;">Your Name</a><sup>1</sup>, 
-                <a href="#" style="color:#fff; text-decoration:underline;">Co-author</a><sup>2</sup>
+                <a href="#" style="color:#ee6262; text-decoration:underline;">Haidong Hou</a><sup>1</sup>, 
+                <a href="#" style="color:#fff; text-decoration:underline;">Zhangguo Yu</a><sup>1</sup>,
+                <a href="#" style="color:#fff; text-decoration:underline;">Tao Han</a><sup>1</sup>,
+                <a href="#" style="color:#fff; text-decoration:underline;">Hengbo Qi</a><sup>1</sup>,
+                <a href="#" style="color:#fff; text-decoration:underline;">Ghazal Khaleel</a><sup>1</sup>,
+                <a href="#" style="color:#fff; text-decoration:underline;">Yu Zhang</a><sup>1</sup>,
+                <a href="#" style="color:#fff; text-decoration:underline;">Yidong Du</a><sup>1</sup>,
             </div>
             <div class="affiliation">
-                <sup>1</sup>Your Institution &nbsp;&nbsp; <sup>2</sup>Collaborator Institution
+                <sup>1</sup>Beijing Institute of Technology &nbsp;&nbsp;
             </div>
             <div class="hero-badges">
                 <a href="#" class="badge">
@@ -282,31 +296,70 @@
         <section class="section" id="abstract">
             <h2 class="section-title">Abstract</h2>
             <p class="abstract">
-                We present a diffusion-based policy learning framework for robust bipedal locomotion in complex terrains. 
-                By formulating action generation as a denoising process conditioned on proprioceptive observations, 
-                our method achieves superior stability during command velocity transitions and rapid disturbance recovery. 
-                Experiments in Isaac Sim and real-world deployment demonstrate agile traversal of discrete obstacles 
-                and autonomous fall recovery, outperforming prior reinforcement learning baselines in sample efficiency 
-                and motion naturalness.
+                Fall recovery is critical for autonomous legged locomotion. 
+                Existing methods have demonstrated that some legged robots, 
+                such as humanoids and quadrupeds, are capable of fall recovery 
+                from diverse postures by utilizing arms or coordinating multi-legs 
+                to generate support forces. Without arms or other legs to provide 
+                supportive assistance, a bipedal-wheeled robot must rely solely on 
+                the actuation of its legs, making recovery particularly difficult. 
+                To address this, we introduce FTSR (Force-guided Teacher-student framework 
+                with Stage-wise Rewards). The force-guided method constructs an external 
+                auxiliary force during simulation training that correlates directly with 
+                the robot's real-time height, explicitly formulating this force as an 
+                optimizable constraint. Through constrained reinforcement learning, 
+                the policy is guided toward reducing force dependency gradually and increasing 
+                the body height, developing internal recovery strategies despite having no arms 
+                for support. Height-progressive stage-Wise rewards progressively structure 
+                posture stabilization during recovery and transition to sustained locomotion, 
+                integrated with teacher-student architecture distilling privileged knowledge 
+                of force effects and recovery dynamics. After simulation training, 
+                the policy is deployed on a physical armless bipedal-wheeled robot and 
+                extensively evaluated. Experiments confirm robust and reliable fall recovery 
+                under diverse challenging conditions, demonstrating strong environmental 
+                adaptability and motion robustness, while maintaining full post-recovery motion 
+                capability. The framework also generalizes effectively to a high-DOF humanoid, 
+                confirming its practical generalizability.
             </p>
         </section>
 
         <!-- 方法 Pipeline -->
-        <section class="section">
+        <section class="section" id="sec-method">
             <h2 class="section-title">Method</h2>
             <p>
-                Our pipeline consists of three stages: (1) expert trajectory collection via privileged teacher policy, 
-                (2) diffusion model training with observation-conditioned denoising, and (3) deployment with 
-                DDPM sampling acceleration. The key insight is to leverage the multimodal action distribution 
-                modeling capacity of diffusion models for contact-rich locomotion tasks.
+                The overall framework is illustrated in Fig. 1. Armless bipedal-wheeled robots lack upper-body support during fall recovery, making them prone to convergence to dead points under pure reward optimization. This motivates formulating external auxiliary forces $\mathcal{F}$ and torques $\mathcal{T}$ as optimizable constraints rather than decaying curricula, enabling the policy to gradually reduce dependency on external assistance while discovering physically feasible recovery trajectories. Such constraint-guided exploration necessitates stable posture refinement across phases, which we achieve through height-progressive stage-wise rewards that auto-transition based on batch height statistics rather than fixed durations.
             </p>
+            <p>
+                Realizing these mechanisms requires balancing privileged information with proprioceptive-only execution, leading to a teacher-student architecture where teacher encoder $E^t$ processes $\mathbf{x}^t_t$ comprising contact forces, base height, and full base state, while student encoder $E^s$ learns equivalent representations from history $\mathbf{o}^s_{t:t-H}$. This history concatenates observations $\mathbf{o}_t$ over past $H$ steps, where each $\mathbf{o}_t \in \mathbb{R}^{34}$ includes angular velocity, gravity projection, user commands, joint positions, velocities, and previous actions. An "or" module routes latent $\mathbf{z}^t_t$ or $\mathbf{z}^s_t$ to shared Actor-Critic networks by agent group, producing $\mathbf{z}_t$ concatenated with current $\mathbf{o}_t$ and $\mathbf{s}_t \in \mathbb{R}^{188}$ containing height map and robot base height. The networks output actions $\mathbf{a}_t$ and values $\hat{V}_t$, with parameters in <a href="#tab-network">Table I</a> and component designs in <a href="#sec-force-guided">Sec. II-C</a> and <a href="#sec-reward">Sec. II-D</a>.
+            </p>
+            
             <div class="figure">
-                <img src="assets/pipeline.png" alt="Method Pipeline">
+                <!-- 注意：这里改成 png/jpg，pdf 浏览器无法直接显示 -->
+                <img src="assets/framework.png" alt="Method Pipeline" style="max-width:100%; border-radius:8px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
                 <div class="figure-caption">
-                    Figure 1: Overview of the proposed diffusion policy framework. 
-                    The observation encoder projects high-dimensional proprioceptive history into a latent embedding, 
-                    which guides the diffusion denoising process to generate smooth and dynamically feasible actions.
+                    <strong>Figure 1:</strong> Force-guided fall-recovery training framework. 
+                    The framework supports either bipedal-wheeled or humanoid robots, selected from <em>Robot Type</em>. Training data flows from the selected robot through <em>Robot Data</em> to generate teacher encoder observation $\mathbf{x}^t_t$ and student history observation $\mathbf{o}^s_{t:t-H}$, which feed $E^t$ and $E^s$ respectively to produce latents $\mathbf{z}^t_t$ and $\mathbf{z}^s_t$. These latents are then selected by an <em>or</em> module, with $\mathbf{z}^t_t$ for teacher-group agents and $\mathbf{z}^s_t$ for student-group agents, to form $\mathbf{z}_t$ concatenated with $\mathbf{o}_t$ and $\mathbf{s}_t$ for shared Actor-Critic networks ($\pi$ and $\phi$) outputting $\mathbf{a}_t$ and $\hat{V}_t$. During training, yellow arrows indicate training signals: $\mathbf{z}^t_t$ and $\mathbf{z}^s_t$ supervise $E^s$ via MSE loss, while $\mathcal{F}$, $\mathcal{T}$, $R_t$, and $\hat{V}_t$ update $E^t$, $\pi$, and $\phi$ to evolve policy toward $\pi^*$ by progressively reducing $\mathcal{F}$ and $\mathcal{T}$ via Force-Guided Learning. As robot base height increases, $R_t$ transitions from $r^u$ to $r^w$ when agents exceeding height thresholds reach two-thirds of the agents, synchronizing target height and rewards with actual height progression.
                 </div>
+            </div>
+        </section>
+
+        <!-- 示例：被引用的目标锚点（放在对应内容处） -->
+        <section class="section" id="sec-force-guided">
+            <h2 class="section-title">Force-Guided Fall Recovery Training</h2>
+            <!-- 这里是 Sec. II-C 的内容 -->
+        </section>
+
+        <section class="section" id="sec-reward">
+            <h2 class="section-title">Reward Design</h2>
+            <!-- 这里是 Sec. II-D 的内容 -->
+        </section>
+
+        <section class="section" id="tab-network">
+            <h2 class="section-title">Network Architecture</h2>
+            <!-- 把论文 Table I 的内容用 HTML 表格重写，或者放一张清晰的表格截图 -->
+            <div class="figure">
+                <img src="assets/table1.png" alt="Network Architecture" style="max-width:100%;">
+                <div class="figure-caption"><strong>Table I:</strong> Network Architecture</div>
             </div>
         </section>
 
@@ -318,9 +371,87 @@
             <div class="video-grid">
                 <div class="video-card">
                     <video autoplay muted loop playsinline poster="assets/vid1.jpg">
-                        <source src="assets/terrain.mp4" type="video/mp4">
+                        <source src="assets/1.mp4" type="video/mp4">
                     </video>
-                    <p>Complex terrain traversal</p>
+                    <p>ground getup one</p>
+                </div>
+                <div class="video-card">
+                    <video autoplay muted loop playsinline poster="assets/vid1.jpg">
+                        <source src="assets/2.mp4" type="video/mp4">
+                    </video>
+                    <p>ground getup two</p>
+                </div>
+                <div class="video-card">
+                    <video autoplay muted loop playsinline poster="assets/vid1.jpg">
+                        <source src="assets/3.mp4" type="video/mp4">
+                    </video>
+                    <p>ground getup three</p>
+                </div>
+                <div class="video-card">
+                    <video autoplay muted loop playsinline poster="assets/vid1.jpg">
+                        <source src="assets/4.mp4" type="video/mp4">
+                    </video>
+                    <p>ground getup four</p>
+                </div>
+                <div class="video-card">
+                    <video autoplay muted loop playsinline poster="assets/vid1.jpg">
+                        <source src="assets/5.mp4" type="video/mp4">
+                    </video>
+                    <p>step-terrain getup five</p>
+                </div>
+                <div class="video-card">
+                    <video autoplay muted loop playsinline poster="assets/vid1.jpg">
+                        <source src="assets/6.mp4" type="video/mp4">
+                    </video>
+                    <p>step-terrain getup six</p>
+                </div>
+                <div class="video-card">
+                    <video autoplay muted loop playsinline poster="assets/vid1.jpg">
+                        <source src="assets/7.mp4" type="video/mp4">
+                    </video>
+                    <p>step-terrain getup seven</p>
+                </div>
+                <div class="video-card">
+                    <video autoplay muted loop playsinline poster="assets/vid1.jpg">
+                        <source src="assets/8.mp4" type="video/mp4">
+                    </video>
+                    <p>slope-terrain getup eight</p>
+                </div>
+                <div class="video-card">
+                    <video autoplay muted loop playsinline poster="assets/vid1.jpg">
+                        <source src="assets/9.mp4" type="video/mp4">
+                    </video>
+                    <p>slope-terrain getup nine</p>
+                </div>
+                <div class="video-card">
+                    <video autoplay muted loop playsinline poster="assets/vid1.jpg">
+                        <source src="assets/10.mp4" type="video/mp4">
+                    </video>
+                    <p>slope-terrain getup ten</p>
+                </div>
+                <div class="video-card">
+                    <video autoplay muted loop playsinline poster="assets/vid1.jpg">
+                        <source src="assets/11.mp4" type="video/mp4">
+                    </video>
+                    <p>outdoor getup eleven</p>
+                </div>
+                <div class="video-card">
+                    <video autoplay muted loop playsinline poster="assets/vid1.jpg">
+                        <source src="assets/12.mp4" type="video/mp4">
+                    </video>
+                    <p>outdoor getup twelve</p>
+                </div>
+                <div class="video-card">
+                    <video autoplay muted loop playsinline poster="assets/vid1.jpg">
+                        <source src="assets/13.mp4" type="video/mp4">
+                    </video>
+                    <p>outdoor getup thirteen</p>
+                </div>
+                <div class="video-card">
+                    <video autoplay muted loop playsinline poster="assets/vid1.jpg">
+                        <source src="assets/14.mp4" type="video/mp4">
+                    </video>
+                    <p>outdoor getup fourteen</p>
                 </div>
                 <div class="video-card">
                     <video autoplay muted loop playsinline poster="assets/vid2.jpg">
