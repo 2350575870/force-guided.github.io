@@ -335,7 +335,7 @@
             
             <div class="figure">
                 <!-- 注意：这里改成 png/jpg，pdf 浏览器无法直接显示 -->
-                <img src="assets/framework.png" alt="Method Pipeline" style="max-width:100%; border-radius:8px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+                <img src="assets/framework7.pdf" alt="Method Pipeline" style="max-width:100%; border-radius:8px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
                 <div class="figure-caption">
                     <strong>Figure 1:</strong> Force-guided fall-recovery training framework. 
                     The framework supports either bipedal-wheeled or humanoid robots, selected from <em>Robot Type</em>. Training data flows from the selected robot through <em>Robot Data</em> to generate teacher encoder observation $\mathbf{x}^t_t$ and student history observation $\mathbf{o}^s_{t:t-H}$, which feed $E^t$ and $E^s$ respectively to produce latents $\mathbf{z}^t_t$ and $\mathbf{z}^s_t$. These latents are then selected by an <em>or</em> module, with $\mathbf{z}^t_t$ for teacher-group agents and $\mathbf{z}^s_t$ for student-group agents, to form $\mathbf{z}_t$ concatenated with $\mathbf{o}_t$ and $\mathbf{s}_t$ for shared Actor-Critic networks ($\pi$ and $\phi$) outputting $\mathbf{a}_t$ and $\hat{V}_t$. During training, yellow arrows indicate training signals: $\mathbf{z}^t_t$ and $\mathbf{z}^s_t$ supervise $E^s$ via MSE loss, while $\mathcal{F}$, $\mathcal{T}$, $R_t$, and $\hat{V}_t$ update $E^t$, $\pi$, and $\phi$ to evolve policy toward $\pi^*$ by progressively reducing $\mathcal{F}$ and $\mathcal{T}$ via Force-Guided Learning. As robot base height increases, $R_t$ transitions from $r^u$ to $r^w$ when agents exceeding height thresholds reach two-thirds of the agents, synchronizing target height and rewards with actual height progression.
@@ -343,30 +343,34 @@
             </div>
         </section>
 
-        <!-- 示例：被引用的目标锚点（放在对应内容处） -->
-        <section class="section" id="sec-force-guided">
-            <h2 class="section-title">Force-Guided Fall Recovery Training</h2>
-            <!-- 这里是 Sec. II-C 的内容 -->
-        </section>
-
-        <section class="section" id="sec-reward">
-            <h2 class="section-title">Reward Design</h2>
-            <!-- 这里是 Sec. II-D 的内容 -->
-        </section>
-
-        <section class="section" id="tab-network">
-            <h2 class="section-title">Network Architecture</h2>
-            <!-- 把论文 Table I 的内容用 HTML 表格重写，或者放一张清晰的表格截图 -->
-            <div class="figure">
-                <img src="assets/table1.png" alt="Network Architecture" style="max-width:100%;">
-                <div class="figure-caption"><strong>Table I:</strong> Network Architecture</div>
+        <section class="section" id="sec-method">
+            <h2 class="section-title">Simulation Results</h2>
+            <p>
+                Our framework enables armless bipedal-wheeled robots to recover from falls while maintaining sustained locomotion, and further generalizes to a humanoid platform.
+            </p>
+            
+            <div class="video-grid">
+                <div class="video-card">
+                    <video autoplay muted loop playsinline poster="assets/vid1.jpg">
+                        <source src="assets/simulation_1.mp4" type="video/mp4">
+                    </video>
+                    <p>Bipedal-Wheeled Robot in Simulation</p>
+                </div>
+                <div class="video-card">
+                    <video autoplay muted loop playsinline poster="assets/vid1.jpg">
+                        <source src="assets/Unitree_getup.mp4" type="video/mp4">
+                    </video>
+                    <p>Humanoid Robot in Simulation</p>
+                </div>
             </div>
         </section>
 
+
+
         <!-- 视频结果 -->
         <section class="section">
-            <h2 class="section-title">Results</h2>
-            <p>Qualitative comparison of our method against baseline approaches in challenging scenarios.</p>
+            <h2 class="section-title">Real-World Experiments</h2>
+            <p>To validate the effectiveness of our approach, we deployed the trained policy on our self-developed $\textit{JiaRan}$ robot and conducted real-world tests across various terrains and initial poses. All experimental results demonstrate the robustness and adaptability of our method.</p>
 
             <div class="video-grid">
                 <div class="video-card">
@@ -452,18 +456,6 @@
                         <source src="assets/14.mp4" type="video/mp4">
                     </video>
                     <p>outdoor getup fourteen</p>
-                </div>
-                <div class="video-card">
-                    <video autoplay muted loop playsinline poster="assets/vid2.jpg">
-                        <source src="assets/fall_recovery.mp4" type="video/mp4">
-                    </video>
-                    <p>Autonomous fall recovery</p>
-                </div>
-                <div class="video-card">
-                    <video autoplay muted loop playsinline poster="assets/vid3.jpg">
-                        <source src="assets/disturbance.mp4" type="video/mp4">
-                    </video>
-                    <p>External disturbance rejection</p>
                 </div>
             </div>
         </section>
